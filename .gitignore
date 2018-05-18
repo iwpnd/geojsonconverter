@@ -1,0 +1,6 @@
+.vscode/
+env/
+fuelitaly.csv
+*.ipynb
+.ipynb_checkpoints/
+zappa_settings.json
