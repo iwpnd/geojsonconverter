@@ -130,6 +130,7 @@ def create_map_from_geojson(geojson, df):
 
     m = folium.Map(
         location=[df.lat.mean(), df.lon.mean()],
+        tiles='cartodbpositron',
         zoom_start=6)
     folium.GeoJson(geojson, name='geojson').add_to(m)
     mapname = 'map.html'
