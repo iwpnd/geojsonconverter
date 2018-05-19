@@ -5,12 +5,14 @@ import pandas as pd
 from flask import Flask, flash, render_template, request
 from flask import redirect, url_for, send_file
 from werkzeug.utils import secure_filename
+import folium
 
 
 app = Flask(__name__)
 
 # upload folder for files, here aws lambda /tmp/
 UPLOAD_FOLDER = '/tmp/'
+OUTPUTFILE = 'output.geojson'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # list of allowed file extensions
@@ -106,19 +108,35 @@ def create_geojson_from_df(df):
             for prop in properties:
                 feature['properties'][prop] = row[prop]
             geojson['features'].append(feature)
-
-        outputfile = 'output.geojson'
         
-        with open(os.path.join(app.config['UPLOAD_FOLDER'], outputfile), 'w', encoding='utf8') as fp:
+        with open(os.path.join(app.config['UPLOAD_FOLDER'], OUTPUTFILE), 'w', encoding='utf8') as fp:
              json.dump(geojson, fp, ensure_ascii=False)
         
-        return send_file(os.path.join(app.config['UPLOAD_FOLDER'], outputfile), as_attachment=True)
+        return geojson
+        #return send_file(os.path.join(app.config['UPLOAD_FOLDER'], OUTPUTFILE), as_attachment=True)
 
     except KeyError:
         return "The file you uploaded does not have 'lat' and/or 'lon' columns"
 
 
-@app.route('/transform/<filename>', methods=['GET'] )
+def create_map_from_geojson(geojson, df):
+    """
+    create a folium map to be served via iframe in url_for('mapviewer')
+
+    keywords:
+    df -- dataframe of uploaded delimited file
+    geojson -- geojson object created from dataframe
+    """
+
+    m = folium.Map(
+        location=[df.lat.mean(), df.lon.mean()],
+        zoom_start=6)
+    folium.GeoJson(geojson, name='geojson').add_to(m)
+    mapname = 'map.html'
+    m.save(os.path.join(app.config['UPLOAD_FOLDER'], mapname))
+    
+
+@app.route('/transform/<filename>', methods=['GET', 'POST'] )
 def transformed_file(filename):
     f = filename
 
@@ -131,9 +149,27 @@ def transformed_file(filename):
         if not df:
             return "The file you uploaded does not contain column-headers"
         else:
-            return create_geojson_from_df(df)
+            geojson = create_geojson_from_df(df)
     except ValueError:
-        return create_geojson_from_df(df)
+        geojson = create_geojson_from_df(df)
+    
+    create_map_from_geojson(geojson, df)
+    
+    return render_template('download.html')
+
+
+@app.route("/download/", methods=['GET'])
+def download_geojson():
+    return send_file(os.path.join(
+        app.config['UPLOAD_FOLDER'], OUTPUTFILE), as_attachment=True)
+
+
+@app.route("/mapviewer/")
+def map_viewer():
+    fp = os.path.join(app.config['UPLOAD_FOLDER'], 'map.html')
+    with open(fp, "r") as fo:
+        html_contents = fo.read()
+    return html_contents
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -163,4 +199,4 @@ def upload_file():
     return render_template('convert.html')
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
