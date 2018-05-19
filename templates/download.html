@@ -37,9 +37,11 @@
                         <small>create geoJSON from delimited files</small>
                     </h3>
                 </legend>
-                <iframe src="{{ url_for('map_viewer') }}" width="100%" height="400"></iframe>
                 <div class="form-group">
-                    
+                    <input type="button" class="btn btn-primary bg-info text-white form-control" value="back to upload" onclick="location.href = '{{ url_for('upload_file') }}';">
+                </div>
+                <iframe src="{{ url_for('map_viewer') }}" width="100%" height="400"></iframe>
+                <div class="form-group">  
                     <input type="button" class="btn btn-primary bg-info text-white form-control" value="download" onclick="location.href = '{{ url_for('download_geojson') }}';">
                 </div>
             </form>

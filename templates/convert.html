@@ -24,7 +24,7 @@
 <body>
     <div class="container h-100">
         <div class="row h-100 justify-content-center align-items-center">
-            <form action="/" method="post" enctype="multipart/form-data" class="col-12">
+            <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data" class="col-12">
                     <legend>
                         <h3 style="padding-bottom:50px">Geoconverter
                             <small>create geoJSON from delimited files</small>

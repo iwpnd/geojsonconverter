@@ -1,5 +1,6 @@
 .vscode/
 env/
+tmp/
 fuelitaly.csv
 *.ipynb
 .ipynb_checkpoints/

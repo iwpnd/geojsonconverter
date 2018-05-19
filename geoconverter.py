@@ -97,7 +97,7 @@ def create_geojson_from_df(df):
     """
 
     try:
-        properties = df.drop(['lat', 'lon'], axis=1).columns.tolist()
+        properties = df.copy().drop(['lat', 'lon'], axis=1).columns.tolist()
         geojson = {'type': 'FeatureCollection', 'features': []}
 
         for _, row in df.iterrows():
@@ -139,11 +139,12 @@ def create_map_from_geojson(geojson, df):
 @app.route('/transform/<filename>', methods=['GET', 'POST'] )
 def transformed_file(filename):
     f = filename
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], f)
 
-    with open(f, 'rb') as content:
+    with open(os.path.join(app.config['UPLOAD_FOLDER'], f) , 'rb') as content:
         delimiter = sniff_delimiter_from_content(content)
         has_header = sniff_header_from_content(content)
-        df = dataframe_from_content(f, delimiter, has_header)
+        df = dataframe_from_content(filepath, delimiter, has_header)
     
     try:
         if not df:
@@ -199,4 +200,4 @@ def upload_file():
     return render_template('convert.html')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
